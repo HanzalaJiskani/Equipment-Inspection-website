@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipment Management System - Generate QR Code</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 50px 0;
+        }
+        .qr-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .qr-header {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .qr-body {
+            padding: 40px;
+            text-align: center;
+        }
+        .qr-image {
+            border: 3px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            display: inline-block;
+            margin: 20px 0;
+        }
+        .btn-action {
+            margin: 5px;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .inspector-notice {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="qr-card">
+                <div class="qr-header">
+                    <h3><i class="fas fa-qrcode"></i> QR Code Generator</h3>
+                    <p class="mb-0" id="equipmentIdDisplay">Equipment: </p>
+                </div>
+                <div class="qr-body">
+                    <div id="errorAlert" class="alert alert-danger" style="display:none;">
+                        <i class="fas fa-exclamation-triangle"></i> <span id="errorMessage"></span>
+                    </div>
+                    
+                    <div id="successContent" style="display:none;">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> QR Code generated successfully!
+                        </div>
+
+                        <div class="inspector-notice">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Inspector Interface:</strong> This QR code will direct inspectors to a dedicated inspection interface with limited access.
+                        </div>
+
+                        <div class="qr-image">
+                            <img id="qrImage" src="" alt="QR Code" class="img-fluid" style="max-width: 250px;">
+                        </div>
+
+                        <div class="equipment-info mb-4">
+                            <div class="row text-start">
+                                <div class="col-6">
+                                    <strong>Type:</strong> <span id="equipmentType">Not specified</span><br>
+                                    <strong>Location:</strong> <span id="equipmentLocation">Not specified</span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Area:</strong> <span id="equipmentArea">Not specified</span><br>
+                                    <strong>Due Date:</strong> <span id="equipmentDueDate">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button onclick="printQR()" class="btn btn-success btn-action">
+                                <i class="fas fa-print"></i> For Printing
+                            </button>
+			    <button onclick="downloadQR()" class="btn btn-info btn-action">
+    				<i class="fas fa-download"></i> Download
+			    </button>
+
+                            
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-action">
+    				<i class="fas fa-home"></i> Dashboard
+			    </a>
+
+                        </div>
+                    </div>
+                    
+                    <a href="index.html" class="btn btn-primary btn-action" id="backButton" style="display:none;">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+
+const equipment = {
+    equipment_id: "{{ equipment.equipment_id }}",
+    type: "{{ equipment.type_name }}",
+    location: "{{ equipment.location_name }}",
+    area: "{{ equipment.area }}",
+    due_date: "{{ equipment.due_date }}"
+};
+function formatDate(dateString) {
+    if (!dateString || dateString === 'None' || dateString === '0000-00-00') {
+        return 'N/A';
+    }
+    const date = new Date(dateString);
+    if (isNaN(date)) return 'N/A';
+    return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+// Configuration
+const SITE_NAME = "Equipment Management System";
+const SITE_URL = window.location.origin + "/";
+
+
+// Show error
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorAlert').style.display = 'block';
+    document.getElementById('backButton').style.display = 'inline-block';
+}
+
+// Display equipment
+function displayEquipment(equipment) {
+
+    // Header
+    const header = document.getElementById('equipmentIdDisplay');
+    if (header) header.textContent = 'Equipment: ' + equipment.equipment_id;
+
+    // Build QR URL
+    const baseUrl = window.location.origin +
+        "/inspection_form?equipment_id=" + equipment.equipment_id;
+
+    const qrUrl =
+        "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
+        encodeURIComponent(baseUrl);
+
+    // QR image
+    const qrImg = document.getElementById('qrImage');
+    if (qrImg) qrImg.src = qrUrl;
+
+    // Equipment fields (SAFE)
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    };
+
+    setText('equipmentType', equipment.type || 'Not specified');
+    setText('equipmentLocation', equipment.location || 'Not specified');
+    setText('equipmentArea', equipment.area || 'Not specified');
+    setText(
+        'equipmentDueDate',
+        equipment.due_date ? formatDate(equipment.due_date) : 'N/A'
+    );
+
+    // Links
+    const download = document.getElementById('downloadLink');
+    if (download) download.href = qrUrl;
+
+    const preview = document.getElementById('previewLink');
+    if (preview) preview.href = baseUrl;
+
+    const staff = document.getElementById('staffViewLink');
+    if (staff) staff.href = "/equipment/" + equipment.equipment_id;
+
+    // Store globals
+    window.currentEquipment = equipment;
+    window.currentQrUrl = qrUrl;
+
+    // SHOW content (this was never reached before)
+    const success = document.getElementById('successContent');
+    if (success) success.style.display = 'block';
+}
+
+function initializePage() {
+
+    if (!equipment.equipment_id) {
+        showError("Equipment ID is required.");
+        return;
+    }
+    displayEquipment(equipment);
+}
+
+
+
+// Print QR code
+function printQR() {
+    const equipment = window.currentEquipment;
+    const qrUrl = window.currentQrUrl;
+
+    const printWindow = window.open('', '_blank');
+
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>QR Code - ${equipment.equipment_id}</title>
+            <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                .qr { margin: 30px 0; }
+            </style>
+        </head>
+        <body>
+            <h2>Equipment QR Code</h2>
+            <p><strong>ID:</strong> ${equipment.equipment_id}</p>
+            <img id="qrImg" class="qr" src="${qrUrl}" width="300">
+        </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+
+    // ✅ WAIT for image to load
+    printWindow.onload = function () {
+        const img = printWindow.document.getElementById('qrImg');
+        img.onload = function () {
+            printWindow.focus();
+            printWindow.print();
+        };
+    };
+}
+function downloadQR() {
+    const qrUrl = window.currentQrUrl;
+    const equipmentId = window.currentEquipment.equipment_id;
+
+    fetch(qrUrl)
+        .then(res => res.blob())
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `QR_${equipmentId}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        })
+        .catch(() => alert("Failed to download QR code"));
+}
+
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initializePage);
+</script>
+</body>
+</html>

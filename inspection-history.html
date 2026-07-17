@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fire Safety System - Inspection History</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --info: #4895ef;
+            --warning: #f8961e;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --white: #ffffff;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fb;
+            color: #4a5568;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: backgroundMove 20s ease-in-out infinite;
+            z-index: -1;
+            will-change: transform;
+        }
+
+        @keyframes backgroundMove {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: var(--white);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            color: var(--white);
+            margin-bottom: 20px;
+        }
+        
+        .stats-card .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        
+        .stats-card .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .table th {
+            font-weight: 600;
+            color: var(--gray);
+            border-top: none;
+            position: sticky;
+            top: 0;
+            background-color: var(--white);
+            z-index: 10;
+        }
+        
+        .table td {
+            vertical-align: middle;
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 5px 10px;
+        }
+        
+        .filter-section {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .inspection-form-view .form-group {
+            background-color: #f8f9fa;
+            transition: all 0.2s ease;
+            border: 1px solid #e9ecef !important;
+        }
+
+        .inspection-form-view .form-group:hover {
+            background-color: #e9ecef;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .inspection-header {
+            background: linear-gradient(135deg, #4361ee, #3f37c9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #dee2e6;
+        }
+
+        .table-responsive {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .table-responsive::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        .btn-action {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 6px 12px;
+            margin-right: 5px;
+        }
+        
+        .export-buttons {
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-section .row > div {
+                margin-bottom: 15px;
+            }
+            
+            .export-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .export-buttons .btn {
+                margin-bottom: 5px;
+            }
+        }
+
+        @media print {
+            .navbar, .filter-section, .export-buttons, .btn, .modal { 
+                display: none !important; 
+            }
+            .card { 
+                box-shadow: none !important; 
+                border: 1px solid #dee2e6 !important; 
+            }
+            .table { 
+                font-size: 12px; 
+            }
+            body::before { 
+                display: none !important; 
+            }
+            .stats-card { 
+                background: #f8f9fa !important; 
+                color: #000 !important; 
+                border: 1px solid #dee2e6; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#" onclick="navigateTo('dashboard')">
+                <i class="fas fa-hospital me-2"></i>Fire Safety System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+		    <li class="nav-item">
+    			<a class="nav-link" href="/">
+    			    <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+    			</a>
+		    </li>
+
+                    
+                    
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="navigateTo('inspection-history')">
+                            <i class="fas fa-history me-1"></i> Inspection History
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-history text-primary me-2"></i> Inspection History</h2>
+                <p class="text-muted mb-0">Complete record of all equipment inspections</p>
+            </div>
+            <div class="d-flex export-buttons">
+                <button class="btn btn-outline-success" onclick="exportToCSV()">
+                    <i class="fas fa-file-csv me-1"></i> Export CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #4361ee, #3f37c9);">
+                    <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                    <div class="stat-value" id="totalInspections">0</div>
+                    <div class="stat-label">Total Inspections</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <div class="stat-value" id="goodCount">0</div>
+                    <div class="stat-label">Good (≥80%)</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                    <div class="stat-value" id="fairCount">0</div>
+                    <div class="stat-label">Fair (60-79%)</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card" style="background: linear-gradient(135deg, #dc3545, #e91e63);">
+                    <i class="fas fa-times-circle fa-2x mb-2"></i>
+                    <div class="stat-value" id="poorCount">0</div>
+                    <div class="stat-label">Poor (<60%)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <h5 class="mb-3"><i class="fas fa-filter me-2"></i> Filter Inspections</h5>
+            <form id="filterForm">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label for="equipment" class="form-label">Equipment ID</label>
+                        <select class="form-select" name="equipment" id="equipment">
+                            <option value="">All Equipment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="inspector" class="form-label">Inspector</label>
+                        <select class="form-select" name="inspector" id="inspector">
+                            <option value="">All Inspectors</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_from" class="form-label">From Date</label>
+                        <input type="date" class="form-control" name="date_from" id="date_from">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_to" class="form-label">To Date</label>
+                        <input type="date" class="form-control" name="date_to" id="date_to">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" name="status" id="status">
+                            <option value="">All Status</option>
+                            <option value="good">Good</option>
+                            <option value="fair">Fair</option>
+                            <option value="poor">Poor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Apply Filters
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                            <i class="fas fa-undo me-1"></i> Clear Filters
+                        </button>
+                        <span class="ms-3 text-muted" id="filterInfo">
+                            Showing 0 of 0 inspections
+                        </span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Inspection History Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-table me-2"></i> Inspection Records</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="inspectionTable">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Equipment ID</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Area</th>
+                                <th>Inspector</th>
+                                <th>Score</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inspectionTableBody">
+                            <tr>
+                                <td colspan="10" class="text-center py-4">
+                                    <i class="fas fa-info-circle text-muted me-2"></i>
+                                    No inspections found. Loading sample data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inspection Details Modal -->
+    <div class="modal fade" id="inspectionDetailsModal" tabindex="-1" aria-labelledby="inspectionDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="inspectionDetailsModalLabel">
+                        <i class="fas fa-clipboard-check me-2"></i> Inspection Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="inspectionDetailsContent" style="max-height: 70vh; overflow-y: auto;">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="exportInspectionToPDF()">
+                        <i class="fas fa-print me-1"></i> Print Form
+                    </button> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // In-memory data storage
+        let inspectionsData = [];
+        let filteredInspections = [];
+        
+        // Initialize sample data
+        // Fetch real data from database
+function initializeSampleData() {
+    fetch('/api/inspections')
+        .then(response => response.json())
+        .then(data => {
+            inspectionsData = data;
+            // Recalculate stats and render table after data loads
+            applyFilters();
+            
+            // If you have a specific updateStats function, call it here.
+            // Often applyFilters() handles re-rendering, but if stats 
+            // are separate, ensure they update:
+            if (typeof updateStats === 'function') {
+                updateStats();
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching inspections:', error);
+            document.getElementById('inspectionTableBody').innerHTML = 
+                '<tr><td colspan="10" class="text-center text-danger">Error loading data</td></tr>';
+        });
+}
+        // Calculate inspection score
+        function calculateScore(inspection) {
+            const questions = [
+                inspection.q1_safety_pin === 'Yes' ? 1 : 0,
+                inspection.q2_gauge_green === 'Yes' ? 1 : 0,
+                inspection.q3_weight_appropriate === 'Yes' ? 1 : 0,
+                inspection.q4_no_damage === 'Yes' ? 1 : 0,
+                inspection.q5_hanging_clip === 'Yes' ? 1 : 0,
+                inspection.q6_accessible === 'Yes' ? 1 : 0,
+                inspection.q7_refill_overdue === 'Yes' ? 1 : 0,
+                inspection.q8_instructions_visible === 'Yes' ? 1 : 0
+            ];
+            const score = questions.reduce((a, b) => a + b, 0);
+            const percentage = Math.round((score / 8) * 100);
+            return { score, percentage };
+        }
+        
+        // Get status details
+        function getStatusDetails(percentage) {
+            if (percentage >= 80) {
+                return { class: 'success', text: 'Good' };
+            } else if (percentage >= 60) {
+                return { class: 'warning', text: 'Fair' };
+            } else {
+                return { class: 'danger', text: 'Poor' };
+            }
+        }
+        
+        // Format date
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
+        }
+        
+        // Format time
+        function formatTime(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        }
+        
+        // Update UI
+        function updateUI() {
+            updateStatistics();
+            updateFilterDropdowns();
+            renderTable();
+        }
+        
+        // Update statistics
+        function updateStatistics() {
+            let good = 0, fair = 0, poor = 0;
+            
+            filteredInspections.forEach(inspection => {
+                const { percentage } = calculateScore(inspection);
+                if (percentage >= 80) good++;
+                else if (percentage >= 60) fair++;
+                else poor++;
+            });
+            
+            document.getElementById('totalInspections').textContent = filteredInspections.length;
+            document.getElementById('goodCount').textContent = good;
+            document.getElementById('fairCount').textContent = fair;
+            document.getElementById('poorCount').textContent = poor;
+            document.getElementById('filterInfo').textContent = 
+                `Showing ${filteredInspections.length} of ${inspectionsData.length} inspections`;
+        }
+        
+        // Update filter dropdowns
+        function updateFilterDropdowns() {
+            const equipmentIds = [...new Set(inspectionsData.map(i => i.equipment_id))].sort();
+            const inspectors = [...new Set(inspectionsData.map(i => i.inspector_name))].sort();
+            
+            const equipmentSelect = document.getElementById('equipment');
+            const inspectorSelect = document.getElementById('inspector');
+            
+            // Keep current selection
+            const currentEquipment = equipmentSelect.value;
+            const currentInspector = inspectorSelect.value;
+            
+            // Update equipment dropdown
+            equipmentSelect.innerHTML = '<option value="">All Equipment</option>';
+            equipmentIds.forEach(id => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = id;
+                if (id === currentEquipment) option.selected = true;
+                equipmentSelect.appendChild(option);
+            });
+            
+            // Update inspector dropdown
+            inspectorSelect.innerHTML = '<option value="">All Inspectors</option>';
+            inspectors.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                if (name === currentInspector) option.selected = true;
+                inspectorSelect.appendChild(option);
+            });
+        }
+        
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('inspectionTableBody');
+            
+            if (filteredInspections.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="text-center py-4">
+                            <i class="fas fa-info-circle text-muted me-2"></i>
+                            No inspections found matching the current filters.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredInspections.map(inspection => {
+                const { percentage } = calculateScore(inspection);
+                const status = getStatusDetails(percentage);
+                
+                return `
+                    <tr>
+                        <td>
+                            ${formatDate(inspection.submitted_at)}<br>
+                            <small class="text-muted">${formatTime(inspection.submitted_at)}</small>
+                        </td>
+                        <td>
+                            <a href="#" onclick="navigateToEquipment('${inspection.equipment_id}')" class="text-decoration-none">
+                                ${inspection.equipment_id}
+                            </a>
+                        </td>
+                        <td>${inspection.type || '-'}</td>
+                        <td>${inspection.location || '-'}</td>
+                        <td>${inspection.area || '-'}</td>
+                        <td>${inspection.inspector_name}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-${status.class}" 
+                                     role="progressbar" style="width: ${percentage}%" 
+                                     aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                                    ${percentage}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-${status.class}">
+                                ${status.text}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" 
+                                    onclick='showInspectionDetails(${JSON.stringify(inspection).replace(/'/g, "\\'").replace(/"/g, "&quot;")})'
+                                    title="View complete inspection form">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                        
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            const equipment = document.getElementById('equipment').value;
+            const inspector = document.getElementById('inspector').value;
+            const dateFrom = document.getElementById('date_from').value;
+            const dateTo = document.getElementById('date_to').value;
+            const status = document.getElementById('status').value;
+            
+            filteredInspections = inspectionsData.filter(inspection => {
+                if (equipment && inspection.equipment_id !== equipment) return false;
+                if (inspector && inspection.inspector_name !== inspector) return false;
+                
+                if (dateFrom) {
+                    const inspectionDate = new Date(inspection.submitted_at).toISOString().split('T')[0];
+                    if (inspectionDate < dateFrom) return false;
+                }
+                
+                if (dateTo) {
+                    const inspectionDate = new Date(inspection.submitted_at).toISOString().split('T')[0];
+                    if (inspectionDate > dateTo) return false;
+                }
+                
+                if (status) {
+                    const { percentage } = calculateScore(inspection);
+                    if (status === 'good' && percentage < 80) return false;
+                    if (status === 'fair' && (percentage < 60 || percentage >= 80)) return false;
+                    if (status === 'poor' && percentage >= 60) return false;
+                }
+                
+                return true;
+            });
+            
+            updateUI();
+        }
+        
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('filterForm').reset();
+            filteredInspections = [...inspectionsData];
+            updateUI();
+        }
+        
+        // Show inspection details
+        function showInspectionDetails(inspection) {
+            const checklist = [
+                { key: 'q1_safety_pin', icon: 'fa-heart', color: 'text-danger', label: '1. Safety pin is intact' },
+                { key: 'q2_gauge_green', icon: 'fa-biohazard', color: 'text-success', label: '2. Gauge is at green level' },
+                { key: 'q3_weight_appropriate', icon: 'fa-stopwatch', color: 'text-info', label: '3. Weight is appropriate' },
+                { key: 'q4_no_damage', icon: 'fa-tools', color: 'text-warning', label: '4. No pinholes/damage/rust' },
+                { key: 'q5_hanging_clip', icon: 'fa-paperclip', color: 'text-secondary', label: '5. Hanging clip is intact' },
+                { key: 'q6_accessible', icon: 'fa-person-walking', color: 'text-primary', label: '6. Easily accessible / Not blocked' },
+                { key: 'q7_refill_overdue', icon: 'fa-hourglass', color: 'text-danger', label: '7. Refill date is valid (not expired)' },
+                { key: 'q8_instructions_visible', icon: 'fa-eye', color: 'text-info', label: '8. Instructions are visible' }
+            ];
+
+            let rows = '';
+            checklist.forEach(q => {
+                let answer = inspection[q.key];
+                let iconHtml = `<i class="fas ${q.icon} ${q.color}"></i>`;
+                let ansIcon = '';
+                let ansClass = '';
+                let ansText = '';
+
+                if (q.key === 'q7_refill_overdue') {
+    // Q7: "Refill date is valid (not expired)"
+            if (answer === 'Yes') {
+                    ansIcon = '<i class="fas fa-check-square text-success"></i>';
+                    ansText = 'Yes';
+                    ansClass = 'text-success fw-bold';
+                } else if (answer === 'No') {
+                    ansIcon = '<i class="fas fa-times text-danger"></i>';
+                    ansText = 'No';
+                    ansClass = 'text-danger fw-bold';
+                } else {
+                    ansText = '-';
+                }
+            } else {
+                // ALL other questions (normal Yes = good, No = bad)
+                if (answer === 'Yes') {
+                    ansIcon = '<i class="fas fa-check-square text-success"></i>';
+                    ansText = 'Yes';
+                    ansClass = 'text-success fw-bold';
+                } else if (answer === 'No') {
+                    ansIcon = '<i class="fas fa-times text-danger"></i>';
+                    ansText = 'No';
+                    ansClass = 'text-danger fw-bold';
+                } else {
+                    ansText = '-';
+                }
+            }
+
+
+
+                rows += `
+                <div class="d-flex align-items-center py-2 px-3 border-bottom">
+                    <div class="flex-grow-1 d-flex align-items-center">
+                        ${iconHtml}
+                        <span class="fw-bold ms-2">${q.label}</span>
+                    </div>
+                    <div class="text-end" style="min-width:120px;">
+                        <span class="${ansClass}" style="font-size:1.1em;">${ansIcon} ${ansText}</span>
+                    </div>
+                </div>
+                `;
+            });
+
+            let html = `
+            <div>
+                <div class="p-3 mb-2" style="background:linear-gradient(90deg,#21c08b,#28a745);border-radius:16px;">
+                    <h3 class="mb-1 text-white fw-bold"><i class="fas fa-clipboard-check me-2"></i>Equipment Inspection</h3>
+                    <p class="mb-0 text-white">Inspector: <strong>${inspection.inspector_name || '-'}</strong></p>
+                </div>
+                <div class="px-3 py-2 mb-2" style="background:linear-gradient(90deg,#17a2b8,#138496);color:white;border-radius:12px;">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div><strong>ID:</strong> ${inspection.equipment_id || '-'}</div>
+                            <div><strong>Location:</strong> ${inspection.location || '-'}</div>
+                            <div><strong>Type:</strong> ${inspection.type || '-'}</div>
+                            <div><strong>Area:</strong> ${inspection.area || '-'}</div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <div><strong>Current Due Date:</strong>
+                                <span class="ms-2">${formatDate(inspection.due_date)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-2 px-3 py-2" style="background:#1565c0;color:#fff;border-radius:8px;">
+                    <i class="fas fa-list-check me-2"></i><strong>Equipment Inspection Checklist</strong>
+                </div>
+                <div class="mb-4 border rounded bg-white">
+                    ${rows}
+                </div>
+                <div class="mb-2 px-3">
+                    <span><i class="fas fa-comment text-secondary"></i> <strong>Additional Remarks (Optional)</strong></span>
+                    <div class="border rounded p-2 mt-1 bg-light">
+                        ${inspection.remarks ? inspection.remarks : '<em class="text-muted">No remarks</em>'}
+                    </div>
+                </div>
+            </div>
+            `;
+
+            document.getElementById('inspectionDetailsContent').innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById('inspectionDetailsModal'));
+            modal.show();
+        }
+        
+        // Export to CSV
+        function exportToCSV() {
+            try {
+                const headers = ['Date & Time', 'Equipment ID', 'Type', 'Location', 'Area', 'Inspector', 'Score', 'Status'];
+                let csv = headers.map(h => `"${h}"`).join(',') + '\n';
+                
+                filteredInspections.forEach(inspection => {
+                    const { percentage } = calculateScore(inspection);
+                    const status = getStatusDetails(percentage);
+                    
+                    const row = [
+                        `${formatDate(inspection.submitted_at)} ${formatTime(inspection.submitted_at)}`,
+                        inspection.equipment_id,
+                        inspection.type || '-',
+                        inspection.location || '-',
+                        inspection.area || '-',
+                        inspection.inspector_name,
+                        `${percentage}%`,
+                        status.text
+                    ].map(cell => `"${cell}"`);
+                    
+                    csv += row.join(',') + '\n';
+                });
+
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `inspection_history_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                alert('CSV file has been downloaded successfully!');
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Error exporting CSV file. Please try again.');
+            }
+        }
+        
+        // Export inspection to PDF
+        function exportInspectionToPDF() {
+            try {
+                const content = document.getElementById('inspectionDetailsContent').innerHTML;
+                const title = document.querySelector('#inspectionDetailsModalLabel').textContent;
+                
+                const equipmentMatch = content.match(/ID:<\/strong>\s*([^<]+)</);
+                const equipmentId = equipmentMatch ? equipmentMatch[1].trim() : 'unknown';
+                
+                const printWindow = window.open('', '_blank', 'width=800,height=600');
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>${title} - ${equipmentId}</title>
+                        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                        <style>
+                            body { 
+                                font-family: Arial, sans-serif; 
+                                margin: 20px; 
+                                color: #333;
+                                font-size: 12px;
+                                background: white;
+                            }
+                            
+                            .p-3.mb-2 {
+                                background: linear-gradient(90deg, #21c08b, #28a745) !important;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                                color: white !important;
+                                padding: 20px !important;
+                                border-radius: 10px !important;
+                                margin-bottom: 20px !important;
+                            }
+                            
+                            .px-3.py-2.mb-2 {
+                                background: linear-gradient(90deg, #17a2b8, #138496) !important;
+                                color: white !important;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                            }
+                            
+                            .mb-2.px-3.py-2 {
+                                background: #1565c0 !important;
+                                color: white !important;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                            }
+                            
+                            .text-success { color: #28a745 !important; }
+                            .text-danger { color: #dc3545 !important; }
+                            .fw-bold { font-weight: bold !important; }
+                            
+                            @page { margin: 0.75in; size: A4; }
+                            @media print {
+                                * {
+                                    -webkit-print-color-adjust: exact !important;
+                                    color-adjust: exact !important;
+                                }
+                            }
+                            
+                            .pdf-header {
+                                text-align: center;
+                                margin-bottom: 30px;
+                                border-bottom: 2px solid #dee2e6;
+                                padding-bottom: 20px;
+                            }
+                            
+                            .pdf-footer {
+                                margin-top: 30px;
+                                text-align: center;
+                                font-size: 10px;
+                                color: #6c757d;
+                                border-top: 1px solid #dee2e6;
+                                padding-top: 15px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="pdf-header">
+                            <h2 style="margin-bottom: 5px; color: #4361ee;">${title}</h2>
+                            <p style="color: #666; margin-bottom: 5px;">Equipment ID: ${equipmentId}</p>
+                            <p style="color: #666; font-size: 10px;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                        </div>
+                        
+                        ${content}
+                        
+                        <div class="pdf-footer">
+                            <p>This is a computer-generated inspection report.</p>
+                        </div>
+                        
+                        <script>
+                            window.onload = function() {
+                                setTimeout(function() {
+                                    window.print();
+                                }, 500);
+                                
+                                window.addEventListener('afterprint', function() {
+                                    setTimeout(function() {
+                                        window.close();
+                                    }, 100);
+                                });
+                            };
+                        </scr` + `ipt>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF. Please try again.');
+            }
+        }
+        
+        // Duplicate inspection
+        function duplicateInspection(equipmentId) {
+            if (confirm('This will start a new inspection for equipment ' + equipmentId + '. Continue?')) {
+                alert('Navigate to login page with equipment: ' + equipmentId);
+            }
+        }
+        
+        // Navigation functions
+        function navigateTo(page) {
+            alert(`Navigation to ${page} page would happen here in full application`);
+        }
+        
+        function navigateToEquipment(id) {
+            alert(`View details for equipment ${id}`);
+            return false;
+        }
+        
+        // Form submit handler
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            applyFilters();
+        });
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSampleData();
+        });
+    </script>
+</body>
+</html>

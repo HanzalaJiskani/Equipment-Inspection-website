@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Equipment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif; 
+            padding: 20px;
+        }
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            margin: 30px auto;
+            max-width: 700px;
+        }
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .form-section {
+            padding: 40px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 15px;
+            font-size: 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .quick-links {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .quick-links a {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .required-star {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header-section">
+            <h1><i class="fas fa-plus-circle"></i> Add Equipment</h1>
+            <p class="mb-0">Enter equipment details below</p>
+        </div>
+
+        <div class="form-section">
+            <div class="quick-links">
+                <a href="/" class="btn btn-outline-secondary btn-sm"><i class="fas fa-home"></i> Dashboard</a>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('add_equipment') }}" id="equipmentForm">
+                <div class="mb-3">
+                    <label class="form-label">
+                        Equipment ID <span class="required-star">*</span>
+                    </label>
+                    <input type="text" 
+                           name="equipment_id" 
+                           class="form-control" 
+                           required 
+                           placeholder="e.g., EQ-001">
+                    <small class="text-muted">Must be unique</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">
+                        Type <span class="required-star">*</span>
+                    </label>
+                    <input type="text" 
+                           name="type" 
+                           class="form-control" 
+                           required 
+                           placeholder="e.g., Fire Extinguisher, Defibrillator">
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">
+                            Location <span class="required-star">*</span>
+                        </label>
+                        <input type="text" 
+                               name="location" 
+                               class="form-control" 
+                               required 
+                               placeholder="e.g., Emergency">
+                        <small class="text-muted">Auto-saved to locations table</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Area</label>
+                        <input type="text" 
+                               name="area" 
+                               class="form-control" 
+                               placeholder="e.g., Ward A">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">
+                        Inspection Frequency <span class="required-star">*</span>
+                    </label>
+                    <select name="frequency" class="form-select" required>
+                        <option value="">-- Select Frequency --</option>
+                        <option value="Monthly">Monthly (30 days)</option>
+                        <option value="Quarterly">Quarterly (90 days)</option>
+                        <option value="Bi-Annually">Bi-Annually (180 days)</option>
+                        <option value="Annually">Annually (365 days)</option>
+                    </select>
+                    <small class="text-muted">Auto-saved to inspection_frequency table</small>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save"></i> Save to Database
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('equipmentForm').addEventListener('submit', function(e) {
+            const equipId = this.elements['equipment_id'].value.trim();
+            const type = this.elements['type'].value.trim();
+            const location = this.elements['location'].value.trim();
+            const frequency = this.elements['frequency'].value;
+            
+            if (!equipId || !type || !location || !frequency) {
+                e.preventDefault();
+                alert('Please fill all required fields marked with *');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
