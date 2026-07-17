@@ -443,95 +443,22 @@
         });
 
         function fetchData() {
+            fetch('/api/dashboard-data')
+                .then(response => response.json())
+                .then(data => {
+                    updateStats(data.stats);
+                    updateCharts(data.stats, data.question_stats);
+                    updateCommonProblem(data.most_common_problem);
+                    renderRecentInspections(data.recent_inspections);
+                    
+                    allEquipment = data.equipment_list;
+                    recentInspectionsRaw = data.recent_inspections || [];
+                    
+                    renderEquipmentTable(allEquipment);
+                })
+                .catch(err => console.error('Error:', err));
+        }
 
-		    const data = {
-		        stats: {
-		            current: 18,
-		            due_soon: 6,
-		            overdue: 3,
-		            inspected: 24,
-		            pending: 5,
-		            total: 29
-		        },
-		
-		        most_common_problem: {
-		            name: "Pressure Gauge Failure",
-		            count: 7
-		        },
-		
-		        question_stats: {
-		            q1_yes: 26, q1_no: 3,
-		            q2_yes: 24, q2_no: 5,
-		            q3_yes: 27, q3_no: 2,
-		            q4_yes: 25, q4_no: 4,
-		            q5_yes: 23, q5_no: 6,
-		            q6_yes: 28, q6_no: 1,
-		            q7_yes: 22, q7_no: 7,
-		            q8_yes: 26, q8_no: 3
-		        },
-		
-		        recent_inspections: [
-		            {
-		                equipment_id: "FE-001",
-		                inspector: "Ali",
-		                location: "Emergency",
-		                date: "17 Jul 2026",
-		                result: "Pass"
-		            },
-		            {
-		                equipment_id: "FE-002",
-		                inspector: "Ahmed",
-		                location: "ICU",
-		                date: "17 Jul 2026",
-		                result: "Pass"
-		            },
-		            {
-		                equipment_id: "FE-003",
-		                inspector: "Sara",
-		                location: "Ward A",
-		                date: "16 Jul 2026",
-		                result: "Warning"
-		            }
-		        ],
-		
-		        equipment_list: [
-		            {
-		                equipment_id: "FE-001",
-		                type: "Fire Extinguisher",
-		                location: "Emergency",
-		                area: "Ground Floor",
-		                due_date: "15 Aug 2026",
-		                status: "Current"
-		            },
-		            {
-		                equipment_id: "FE-002",
-		                type: "Fire Extinguisher",
-		                location: "ICU",
-		                area: "First Floor",
-		                due_date: "05 Aug 2026",
-		                status: "Due Soon"
-		            },
-		            {
-		                equipment_id: "FE-003",
-		                type: "Fire Extinguisher",
-		                location: "Ward A",
-		                area: "Second Floor",
-		                due_date: "20 Jun 2026",
-		                status: "Overdue"
-		            }
-		        ]
-		    };
-		
-		    updateStats(data.stats);
-		    updateCharts(data.stats, data.question_stats);
-		    updateCommonProblem(data.most_common_problem);
-		    renderRecentInspections(data.recent_inspections);
-		
-		    allEquipment = data.equipment_list;
-		    recentInspectionsRaw = data.recent_inspections;
-		
-		    renderEquipmentTable(allEquipment);
-		}
 
         function updateStats(stats) {
             document.getElementById('stat-current').textContent = stats.current;
